@@ -1,0 +1,16 @@
+ENTRY &elf &build_id
+if "&elf"=="ig_naming"
+  d.load.elf ../../core/kernel/build/iguana/bin/ig_naming /nocode /noclear /gcc3 /cpp /strippart 8.
+if "&elf"=="kernel"
+  d.load.elf ../../core/kernel/build/pistachio/bin/kernel /nocode /noclear /gcc3 /cpp /strippart 8.
+if "&elf"=="ig_server"
+  d.load.elf ../../core/kernel/build/iguana_server/bin/ig_server /nocode /noclear /gcc3 /cpp /strippart 8.
+if "&elf"=="amss"
+  d.load.elf ../../core/kernel/build/amss/bin/&build_id.reloc /nocode /noclear /cpp /strippart 8.
+if "&elf"=="all"
+(
+  d.load.elf ../../core/kernel/build/iguana/bin/ig_naming /nocode /noclear /gcc3 /cpp /strippart 8.
+  d.load.elf ../../core/kernel/build/pistachio/bin/kernel /nocode /noclear /gcc3 /cpp /strippart 8.
+  d.load.elf ../../core/kernel/build/iguana_server/bin/ig_server /nocode /noclear /gcc3 /cpp /strippart 8.
+  d.load.elf ../../core/kernel/build/amss/bin/&build_id.reloc /nocode /noclear /cpp /strippart 8.
+)

@@ -1,0 +1,108 @@
+;--------------------------------------------------------------------------
+;
+;   Linux Example Script for TRACE32 RTOS debugger
+;
+;   This batchfile serves as a generic example startup script. 
+;
+;   In this example, we assume an ARM920T board with 32MB RAM at 0x20000000
+;
+;--------------------------------------------------------------------------
+
+				
+do setupSystem.cmm 
+
+tronchip.set DABORT OFF 
+tronchip.set PABORT OFF 
+tronchip.set SWI OFF 
+tronchip.set UNDEF OFF 
+
+  d.load.elf ../../platform/mds/amss/bin/&BuildId.reloc /nocode /noclear /cpp /strippart 10.
+  d.load.elf ../../platform/mds/iguana/bin/ig_naming /nocode /noclear /gcc3 /cpp /strippart 10.
+  d.load.elf ../../platform/mds/iguana/bin/qdms_server /nocode /noclear /gcc3 /cpp /strippart 10.
+  d.load.elf ../../platform/mds/iguana/bin/qpmd_server /nocode /noclear /gcc3 /cpp /strippart 10.
+  d.load.elf ../../platform/mds/kxapi/bin/quartz_servers /nocode /noclear /gcc3 /cpp /strippart 10.
+  d.load.elf ../../platform/mds/kxapi/bin/drm /nocode /noclear /gcc3 /cpp /strippart 10.
+  d.load.elf ../../platform/mds/pistachio/bin/kernel /nocode /noclear /gcc3 /cpp /strippart 10.
+  d.load.elf ../../platform/mds/iguana_server/bin/ig_server /nocode /noclear /gcc3 /cpp /strippart 10.
+ screen.on
+
+; Debugger Reset
+
+ ;winpage.reset
+ ;area.reset
+ ;WINPOS 0. 26. 75. 8. 0. 0. W000
+ ;area
+
+ print "initializing..."
+ 
+ print "loading Linux kernel symbols..."
+ d.load.elf ../../platform/mds/linux_kernel/wombat/vmlinux /nocode /noclear /cpp /strippart 10.
+
+; Open a Code Window -- we like to see something
+
+ ;WINPOS 0. 0. 75. 20.
+ ;Data.List
+ ;screen
+ 
+
+; Declare the MMU format to the debugger
+ ; - table format is "LINUX"
+ ; - table base address is at label "swapper_pg_dir"
+ ; - kernel address translation
+ ; Map the virtual kernel symbols to physical addresses to give 
+ ; the debugger access to it before CPU MMU is initialized
+ ; Here, we assume 32MB RAM at physical address 0x03900000
+
+ print "initializing debugger MMU..."
+ ; MMU.FORMAT LINUX swapper_pg_dir 0x80000000--0x81ffffff 0x03900000
+ 
+ ; prepare debugger translation
+ TRANSlation.Create 0x80000000--0x81ffffff 0x03900000   ; map kernel pages at RAM start
+ TRANSlation.COMMON 0x80000000--0xffffffff              ; common area for kernel and processes
+ TRANSlation.TableWalk ON       ; debugger uses a table walk to decode virtual addresses
+;; TRANSlation.ON                 ; switch on debugger(!) address translation 
+ 
+
+; Initialize Linux Awareness
+
+ ; Note that the Linux awareness needs the kernel symbols to work
+ 
+ print "initializing Linux support..."
+ TASK.CONFIG linux          ; loads Linux awareness (linux.t32)
+ MENU.ReProgram linux       ; loads Linux menu (linux.men)
+ HELP.FILTER.Add rtoslinux  ; add linux awareness manual to help filter
+
+dodecrypt "mdstechnology" ./linux_setup.cmm
+
+  ; Make sure L4 menu is loaded
+
+; TASK.sYmbol.Option MMUSCAN OFF  ; not necessary with tablewalk
+ 
+ ; switch on symbol autoloader
+ 
+ sYmbol.AutoLoad.CHECKLINUX "do "+os.ppd()+"/autoload "
+ 
+ ; Group kernel area to be displayed with red bar
+ GROUP.Create "kernel/0" 0xf0000000--f00226eb /RED
+ GROUP.Create "kernel/1" 0xf0024000--f002afff /RED
+ GROUP.Create "vmlinux" 0x71b00000--0x71d713b7 /GREEN
+ GROUP.Create "rootprogram/0" 0x70000000--0x70016666 /BLUE
+ GROUP.Create "rootprogram/0" 0x70040000--0x70053003 /BLUE
+
+task.config l4
+menu.rp l4
+
+do windows.cmm
+; Ok, we're done, let's start Linux
+ 
+; Go
+ print "starting Linux... (please wait)"
+; wait 8.s
+; Break
+ 
+ print "done."     ; done with loading and starting Linux
+
+y.spath + Y:\Projects\9.NeoM2M\Git\eabi1\work\core\amss\platform
+y.spath + Y:\Projects\9.NeoM2M\Git\eabi1\work\core\qlinux
+y.spath + Y:\Projects\9.NeoM2M\Git\eabi1\work\core\amss
+enddo

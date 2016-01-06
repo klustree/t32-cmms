@@ -1,0 +1,83 @@
+;*****************************************************************************
+;**           T32_QSD8650_SCORPION.CMM                                      **
+;**           This script sets up SCORPION JTAG scan for non-DaisyChain mode**
+;**                                                                         **
+;**           Changes:                                                      **
+;**           09-14-07   KB - Moved entry down, added intercom info and     **
+;**                           added optional 'USE=' argument                **
+;**           03-10-07   First version KBurke                               **
+;*****************************************************************************
+local &arg_name 
+local &arg_node_num 
+local &arg_port_num
+local &arg_core_num
+local &arg_use_directive
+local &cmm_dir
+local &core_startup
+local &t32_tempdir
+
+global &t32_intercom_port     // used to identify the current port ID being used
+global &QC_cpu                // current CPU selected
+global &QC_jtag_mode          // jtag mode (0 indicates non-daisychained)
+global &QC_jtag_cfg           // for l4/amss script interfacing parallel indicates non-daisychain
+
+ENTRY &arg_name &arg_node_num &arg_port_num &arg_core_num &arg_use_directive
+
+;STOP    // used only for pedit debug
+
+&t32_intercom_port=&arg_port_num
+
+&cmm_dir=os.ppd()                      ; directory where this script is running from
+&core_startup="T32_DAP.cmm"
+
+if (os.file("&cmm_dir\&core_startup"))
+(
+  do "&cmm_dir\&core_startup"            ; Call standard dap setup and then perform any required overrides
+)
+else
+(
+  print "&cmm_dir\&core_startup" not found"
+  enddo 1
+)
+
+if (&arg_core_num=="")||(&arg_core_num=="CORE=1")
+(
+  if Analyzer()
+  (
+    etm.portmode 1/1
+    ;etm.portmode continuous
+    etm.portsize 16
+    ;etm.contextid 32
+    etm.datatrace address
+    trace.autoinit.on
+    trace.clock 1mhz
+    etm.CYCLEACCURATE on
+    etm.on
+  )
+)
+
+
+;------------------------------------------------------------------------------
+; override any other settings that seem appropriate
+;------------------------------------------------------------------------------
+
+&t32_tempdir=os.ptd()             ; get the active T32 temp directory name 
+cd &t32_tempdir                   ; change directory to the temp T32 directory as default 
+
+printer.file &t32_tempdir\"&arg_name"_"&arg_node_num"_00.lst
+
+&QC_cpu=CPU()
+&QC_jtag_mode=0.          // non-daisychain mode 
+&QC_jtag_cfg="parallel"   // non-daisychain configuration
+
+
+ENDDO 0
+
+
+
+
+
+
+
+
+

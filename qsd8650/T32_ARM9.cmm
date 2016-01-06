@@ -1,0 +1,89 @@
+;Default startup program for TRACE32 ARM9
+;--------------------------------------------
+; 09/20/06 NRizk  - using RTCK
+; 04/19/06 NRizk  - made a copy of T32.CMM and modified it for ARM9
+;--------------------------------------------
+; 02/10/06 NRizk  - 530kHz JTAG clock
+; 01/30/06 NRizk  - 400kHz JTAG clock
+; 08/31/05 KBurke - added onchip breakpoint mode as default and 200Khz JTAG clock
+; 08/25/05 KBurke - added user menus for CP14/cp15 register selection
+; 08/01/05 KBurke - removed softstep, turned off reset vector catch
+;                   and removed low vector software breakpoints
+; 04/30/07 KBurke - added sys.reset for startup to set most defaults properly
+;
+;--------------------------------------------
+;
+;This startup program can be modified according to your needs.
+
+; sys.cpu arm1136jf
+; sys.cpu.cortexa8ncp
+
+sys.reset
+; post DAP processor update
+system.cpu ARM926EJ
+; system.option dap off
+
+etm.off
+system.jtagclock rtck
+; system.jtagclock 200kHz
+b.sel PROGRAM onchip
+
+; turn off hardware breakpoint usage during instruction stepping
+; system.option stepsoft on
+
+; turn off all the vector catch register bits for now - they cause problems
+tronchip.SET ADDRESS OFF
+tronchip.SET ERROR OFF
+tronchip.SET swi OFF
+tronchip.SET undef OFF
+tronchip.SET pabort OFF
+tronchip.SET dabort OFF
+tronchip.set reset off
+
+; replace the vector catch breakpoints with software breakpoints
+; (assumes low vector exception handling
+;b.set 0x4
+;b.set 0xc
+;b.set 0x10
+
+
+;choose hex mode for input
+ radix hex
+
+;Add some extra buttons to the toolbar
+
+ menu.rp
+ (
+  add
+  toolbar
+  (
+   separator
+   toolitem "Source/List" "list" "Data.List"
+   toolitem "Memory Dump" "dump" "Data.dump"
+   toolitem "Register" "reg" "Register"
+   separator
+   toolitem "Watch" ":varwatch" "Var.Watch"
+   toolitem "Stack" ":varframe" "Var.Frame /l /c"
+   toolitem "Automatic Watch" ":varref" "Var.Ref"
+   separator
+   toolitem "List Breakpoints" "break" "Break.List"
+   toolitem "List Symbols" "symbols" "sYmbol.Browse"
+   separator
+  )
+ )
+
+ if language()!=""
+ (
+  local &menuname
+  &menuname="~~/t32"+language()
+  menu.rp &menuname
+ )
+
+;Recall and Define History File
+ autostore , history
+
+; cd L:\raptor_rumi2\lab_tests
+; system.view
+
+
+ enddo

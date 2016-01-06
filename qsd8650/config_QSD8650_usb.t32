@@ -1,0 +1,83 @@
+;--------------------------------------------------------------------
+;  9/14/07 - KBurke - removed core # from intercom socket number, added USE argument
+;  7/03/07 - KBurke - changed sys directive to point to executable directory (~/)
+;  5/24/07 - KBurke - removed 'sys=' setting since Lauterbach appears
+;            to default to the diretory of the executable as long as 
+;            T32SYS environment var does not exist 
+;--------------------------------------------------------------------
+; This config file requires a T32 shortcut that passes in the following
+; command line arguements
+; example shortcut call:
+; t32marm.exe -c "config_QSD8650.t32," "T32_core_startup.cmm" "QSD8650_DC2_aARM"      "T32-RTP-305-09" "30509"     "CORE=1"      "USE=10"    
+;     |                      |                  |                        |                  |             |            |            |          
+;     V                      V                  V                        V                  V             V            V            V                                          ${1}        ${2}            ${3}         ${4}        ${5}
+;  (T32 program)        (config file)     (Startup CMM)            (chip_mode_core)       (NODE)    (unique port#) (opt core #)   (opt USE designator)
+;
+; Command line argument restrictions:
+; The config files defined to date:
+;      - config_QSD8650.t32       (for ethernet based connections)
+;      - config_QSD8650.t32       (for USB based connections)
+;      - config_QSD8650_perl.t32  (for ethernet based connection and a remote API perl socket)
+;      - config_QSD8650_unix.t32  (for ethernet based connections on a linux host)
+;      - config_QSD8650_unix_perl.t32  (for ethernet based connections on a linux host with remote API support)
+; ${1} - should be T32_core_startup.cmm
+; ${2} - can be one of the following:
+;        - QSD8650_aARM            (non-daisychain, Application ARM standalone)
+;        - QSD8650_mARM            (non-daisychain, Modem ARM standalone)
+;        - QSD8650_DSP             (non-daisychain, QDSP6 standalone)
+;        - QSD8650_DC1_aARM        (mode 1 Application ARM, where mode 1 is mARM + aARM on chain)
+;        - QSD8650_DC1_mARM        (mode 1 Modem ARM, where mode 1 is mARM + aARM on chain)
+;        - QSD8650_DC2_mARM        (mode 2 Modem ARM, where mode 2 is mARM + aARM + DSP on chain) 
+;        - QSD8650_DC2_aARM        (mode 2 Application ARM, where mode 2 is mARM + aARM + DSP on chain) 
+;        - QSD8650_DC2_DSP         (mode 2 QDSP6, where mode 2 is mARM + aARM + DSP on chain) 
+; ${3} - The T32 node ID that you plan to connect to (this should be some unique identifier for USB connections) 
+; ${4} - A unique 5-6 digit decimal number (I use the lab room #, last 2 digits of the T32 node + )
+;        - used as the unique port ID for the session being started. Some people use 20001, 20002, etc. 
+; ${5} - CORE=#, where number is 1-9 and used to identify a unique core ID (optional but required for daisychain)
+; $(6) - USE=#, where number is a bit mask (10,01, 110, etc.). Optional but required when T32 units are plugged together. 
+;
+; So here are some examples of the 'target' on the shortcut
+; 1) For mARM running in mode 1:
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_DC1_mARM" "t32-rtp-17" "30517" "CORE=1"
+; 2) For aARM running in mode 1:
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_DC1_aARM" "t32-rtp-17" "30517" "CORE=2"
+; 3) For mARM running in mode 1:
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_DC2_mARM" "t32-rtp-17" "30517" "CORE=1"
+; 4) For aARM running in mode 2:
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_DC2_aARM" "t32-rtp-17" "30517" "CORE=2"
+; 5) For QDSP6 running in mode 2:
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_DC2_DSP" "t32-rtp-17" "30517" "CORE=3"
+; 6) For mARM running in non-daisychain mode (standalone)
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_mARM" "t32-rtp-17" "30517" "CORE=1"
+; 7) For aARM running in non-daisychain mode (standalone; NOTE that the CORE= argument is not needed and 'USE=' indicates user has 2 units plugged together)
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_aARM" "t32-rtp-17" "30517" "USE=10"
+; 8) For QDSP6 running in non-daisychain mode (standalone; NOTE that the last argument, "CORE=1" is optional)
+;    L:\scc\lab_tests\T32\T32MARM.EXE -c l:\scc\lab_tests\t32\cmm_scripts\config_QSD8650.t32, "L:\scc\lab_tests\T32\cmm_scripts\T32_core_startup.cmm" "QSD8650_DSP" "t32-rtp-17" "30517" "CORE=1"
+;--------------------------------------------------------------------
+
+OS=
+ID=­${2}_${4}         ; unique ID needed for temporary file name uniqueness
+TMP=c:\t32work        ; T32 temp file names are prepended with the unique ID above
+SYS=~/                ; make system directory the same as the executable directory
+
+
+SCREEN=
+HEADER=${2}_${3}_${4}
+
+; Ethernet on Host information 
+PBI=
+USB
+${5}                  ; could be 'CORE=1' to indicate the primary core that has the trace window enabled
+${6}                  ; could be 'USE=10' to indicate the first of 2 units plugged into eachother
+
+IC=NETASSIST
+PORT=${4}                  ; Used for interprocess communication (between core debug sessions) 
+                           ; each session must have a unique port number
+; Printer settings
+PRINTER=WINDOWS
+
+;Trace32 API - Next 3 commands are for PERL testing
+;;RCL=NETASSIST
+;PACKLEN=1024
+;PORT=20000
+

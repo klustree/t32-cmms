@@ -1,0 +1,27 @@
+; Environment variables
+OS=
+ID=T32
+TMP=C:\TEMP
+SYS=C:\T32
+
+;T32 Intercom
+IC=NETASSIST
+PORT=20000
+
+
+PBI=
+PARPORT=1
+EPP
+ADDRESS=632
+USB
+USE=011
+;CORE=1
+
+; Printer settings
+PRINTER=WINDOWS
+
+; Screen fonts
+SCREEN=
+FONT=SMALL
+HEADER=ARM9 usb
+

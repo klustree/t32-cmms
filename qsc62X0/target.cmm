@@ -1,0 +1,238 @@
+;============================================================================
+; QSC6xx0
+;============================================================================
+global &BuildBase &BuildId
+global &FullUIBase &FullUIBuildId 
+global &ThinUIBase &ThinUIBuildId
+global &DTGBase &DTGBuildId
+global &CT2PBase &CT2PBuildId
+local &Choice
+
+&Target=""
+&BuildId=""
+&BuildBase=""
+
+if "&Target"=="" 
+ &Target="6270"
+
+&Editor="C:\WINDOWS\notepad.exe"
+&T32_main="C\T32\QSC62X0"
+
+;============================================================================
+; Your ENV Setting!!
+;============================================================================
+&FullUIBase="D:\Works\Projects\1.SK_M2M\DemoVersion\110927_SKT\BMP_cwe640skt\build\ms"
+&FullUIBuildId="CWE640SKT"
+
+&ThinUIBase1="z:\Projects\9.NeoM2M\taco\tacosystem\src\work\core\amss\build\ms"
+&ThinUIBuildId1="KPTBL"
+
+&ThinUIBase2="z:\Projects\9.NeoM2M\taco\tacosystem\src\work\core\amss\build\ms"
+&ThinUIBuildId2="KPTBL"
+
+&DTGBase="Y:\Projects\9.NeoM2M\Git\master\work\core\amss\build\ms"
+&DTGBuildId="KPTBL"
+
+&CT2PBase="Y:\Projects\09.NeoM2M\Git\20150421_eabi\work\core\amss\build\ms"
+&CT2PBase1="Y:\Projects\9.NeoM2M\Git\ct2pimage\trunk\build\ms"
+&CT2PBuildId="NEOW200"
+
+
+;============================================================================
+; MDS Menu!!
+;============================================================================
+WINPOS 0. 0. 80% 100%
+area
+	
+AMSSSelectMenu:
+print "       MM    MMM    DDDD             SSS            IIIIIIII          TTTTTTTTTTT*        TTTTTTTTTTee                                   "
+print "      MMMM   MMM    DDDDDDD        SSSSSSS         IIIIIIIII          TTTTTTTTTTT*        TTTTTTTTTTee                                   "
+print "      MMMM   MMMM   DDD DDDDD    SSS                  III                 TTT                 TTT                                        "
+print "      MMMM  MMMMM   DDD    DDD   SSS                  III      ooooo      TTT                 TTT       eeeee     aaaaa   mm mmm mmmm    "
+print "     MMMMM  MM MM   DDD     DDD  SSSSSSSSS            III     ooooooo      TT                 TTT      eeeeeee   aaaaaaa  mmmmmmmmmmmm   "
+print "     MMMMMMMMM MM   DDD     DDD       SSSSS           III    ooo   oo      TT                 TTT     eee eeee  aaa   aa  mmm  mm  mmm   "
+print "     MM MMMMM  MMM  DDD     DDD          SS           III    oo    oo      TT                 TTT     eeeeee    aa    aa  mm   mm   mm   "
+print "    MMM  MMMM  MMM  DDD     DD  SS      SSS           III    ooo   oo      TT                  TT     eee       aa    aa  mm   mm   mm   "
+print "    MMM  MMMM   MM  DDDDDDDDDD  SSSSSSSSSS          IIIIIIII  ooooooo      TT                  TT      eeeeeeea aaaaaaaam mm   mm   mm   "
+print "    MM    MM    MM   DDDDDDD     SSSSSSS            IIIIIII    oooo        TT                  T         eeee     aaaa am mm   mm   mm   "
+print " "
+print " Hello IoT Developer!! ^_^"
+print " 0: AMSS Full-ui Image(CMOTEC)" 
+print " 1: AMSS Thin-ui Image(CMOTEC)"
+print " 2: AMSS Thin-ui Image(Bit&Pulse)"
+print " 3: NeoM2M Image (W100)"
+print " 4: NeoM2M Image (W200)"
+print " 5: NeoM2M Image (W200 CT2P & MDS Lib)"
+print " Please make a choice: "
+    
+&t32_cmm_stopped=1
+enter &Choice
+&t32_cmm_stopped=0
+print ""
+
+if ("&Choice"=="0")  
+(  
+  &BuildBase="&FullUIBase"
+  &BuildId="&FullUIBuildId"
+  print "AMSS Full UI ENV"                                                                
+)
+else if ("&Choice"=="1") 
+(  
+  &BuildBase="&ThinUIBase1"
+  &BuildId="&ThinUIBuildId1"
+  print "AMSS Thin UI ENV" 
+)
+else if ("&Choice"=="2") 
+(  
+  &BuildBase="&ThinUIBase2"
+  &BuildId="&ThinUIBuildId2"
+  print "AMSS Thin UI ENV" 
+)
+else if ("&Choice"=="3") 
+(  
+  &BuildBase="&DTGBase"
+  &BuildId="&DTGBuildId"
+  print "AMSS Thin UI ENV" 
+)
+else if ("&Choice"=="4") 
+(  
+  &BuildBase="&CT2PBase"
+  &BuildId="&CT2PBuildId"
+  print "AMSS W200 ENV" 
+)
+else if ("&Choice"=="5") 
+(  
+  &BuildBase="&CT2PBase1"
+  &BuildId="&CT2PBuildId"
+  print "AMSS W200 CT2P ENV" 
+)
+else
+(
+ GOTO AMSSSelectMenu
+)
+
+chdir &BuildBase
+
+;============================================================================
+; T32 Menu
+;============================================================================
+menu.reprogram
+(
+	add
+	menu
+    (
+		popup "QSC62xx"
+      (
+			menuitem "ARM9 - &Attach"
+			(
+				Tronchip.set FIQ OFF
+				Tronchip.set IRQ OFF
+				Tronchip.set DABORT OFF
+				Tronchip.set PABORT OFF
+				Tronchip.set SWI OFF
+				Tronchip.set UNDEF OFF
+				Tronchip.set RESET ON
+				Tronchip.set StepVector OFF
+
+				SYSTEM.CPU ARM926EJ
+				SYSTEM.JtagClock RTCK
+
+				SYSTEM.Mode.Attach
+
+				if run()
+					break
+			)
+			
+			separator
+			
+			menuitem "&Erase Nand"
+			(
+				chdir &BuildBase
+				chdir ..\..\tools\mjnand
+
+				if run()   
+				break
+
+				do erasenand
+			)
+			
+			menuitem "&Linux Nand Utils"
+			(
+				chdir &BuildBase
+				chdir ..\..\tools\mjnand
+
+				;if run()   
+				;break
+
+				do nandutil &BuildId
+			)
+			
+			separator
+      
+			menuitem "AMSS  - Program &Build"
+			(
+				chdir &BuildBase
+				chdir ..\..\tools\mjnand
+				do mjnand &BuildId
+			)
+			
+			separator
+
+			menuitem "ARM9   Bootloader - Load Symbols"
+			(
+				chdir &BuildBase
+
+				;On the arm9, load the bootloaders in flash, then: 
+				sys.res
+				sys.cpu arm926ej
+				sys.jc rtck
+
+				sys.up
+				sys.down
+				sys.up
+
+				data.load.elf ../../romboot/sbl/dbl/dbl_KPTBL.elf /nocode /noclear  
+				data.load.elf ../../romboot/sbl/fsbl/fsbl_KPTBL.elf /nocode /noclear 
+				data.load.elf ../../romboot/osbl/osbl_KPTBL.elf /nocode /noclear 
+
+				y.b
+			)
+
+			separator
+
+			menuitem "ARM9 - &Load symbols"
+			(
+				chdir &BuildBase
+				do loadsyms all "&BuildId"   ; Load AMSS&L4 Symbols
+				do linux_vm		           	 ; Load Linux Symbols
+				do cmm/setl4path.cmm		 ; Load Symbol.Spath
+			)
+
+			separator
+			
+			menuitem "ARM9   Reset Symbols"
+			(
+				symbol.reset
+			)
+
+			menuitem "ARM9  Delete Symbols"
+			(
+				symbol.delete
+			)
+
+			menuitem "ARM9  Per view"
+			(
+				chdir &BuildBase
+				per.view ..\..\drivers\hw\hwioreg.per
+			)
+
+
+			
+		)
+    )
+)
+
+;============================================================================
+; END
+;============================================================================
+

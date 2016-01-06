@@ -1,0 +1,79 @@
+;*****************************************************************************
+;**           T32_QSD8650_DC2_ARM9.CMM                                      **
+;**           This script sets up ARM9 JTAG scan for DaisyChain mode 2 (DC2)**
+;**           mode 2 = ARM9 + Scorpion + QDSP6                              **
+;**                                                                         **
+;**           Changes:                                                      **
+;**           09-14-07  KCB - added globals for amss and moved entry line   **
+;**           04-30-07  KCB - make sure this session is nonslave            **
+;**           03-07-07   First version                                      **
+;*****************************************************************************
+local &arg_name 
+local &arg_node_num 
+local &arg_port_num
+local &arg_core_num
+local &arg_use_directive
+local &cmm_dir
+local &core_startup
+local &t32_tempdir
+
+global &t32_intercom_port     // used to identify the current port ID being used
+global &QC_cpu                // current CPU selected
+global &QC_jtag_mode          // jtag mode (0 indicates non-daisychained)
+global &QC_jtag_cfg           // for l4/amss script interfacing parallel indicates non-daisychain
+
+ENTRY &arg_name &arg_node_num &arg_port_num &arg_core_num &arg_use_directive
+
+&t32_intercom_port=&arg_port_num
+
+&cmm_dir=os.ppd()                      ; directory where this script is running from
+&core_startup="T32_ARM9.cmm"
+
+if (os.file("&cmm_dir\&core_startup"))
+(
+  do "&cmm_dir\&core_startup"            ; Call standard dap setup and then perform any required overrides
+)
+else
+(
+  print "&cmm_dir\&core_startup" not found"
+  enddo 1
+)
+
+;------------------------------------------------------------------------------
+; perform daisychain specific overrides
+;------------------------------------------------------------------------------
+; select CPU and options
+  SYSTEM.CPU ARM926EJ
+  SYSTEM.MULTICORE IRPRE 11.  // tell trace32 that there are 11 extra IR bits near TDO (4 for scoprion, 7 for QDSP6
+  SYSTEM.MULTICORE DRPRE 2.  // tell trace32 that there are 2 extra DR bits near TDO 
+  ;SYSTEM.OPTION ENRESET OFF // 01/06/05 change to comment out due to EEMBC start failures
+
+   ; jtag clock is set for real in DetectTarget.cmm
+  system.jtagclock RTCK  // look for ARM's wacky return TCK
+  SYSTEM.MULTICORE SLAVE OFF // tell trace32 that this is the master of the tRST and sRST signals
+; system.up
+
+;------------------------------------------------------------------------------
+; override any other settings that seem appropriate
+;------------------------------------------------------------------------------
+
+&t32_tempdir=os.ptd()             ; get the active T32 temp directory name 
+cd &t32_tempdir                   ; change directory to the temp T32 directory as default 
+
+printer.file &t32_tempdir\"&arg_name"_"&arg_node_num"_00.lst
+
+&QC_cpu=CPU()
+&QC_jtag_mode=2.             // daisychain mode 2 mARM+aARM+dsp
+&QC_jtag_cfg="chain"      // non-daisychain mode
+
+
+ENDDO 0
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,26 @@
+OS=
+ID=11         ; unique ID needed for temporary file name uniqueness
+TMP=c:\t32\work        ; T32 temp file names are prepended with the unique ID above
+SYS=~/                ; make system directory the same as the executable directory
+
+
+SCREEN=
+HEADER=${2}_${3}_${4}
+
+; Ethernet on Host information 
+PBI=
+USB
+${5}                  ; could be 'CORE=1' to indicate the primary core that has the trace window enabled
+${6}                  ; could be 'USE=10' to indicate the first of 2 units plugged into eachother
+
+IC=NETASSIST
+PORT=${4}                  ; Used for interprocess communication (between core debug sessions) 
+                           ; each session must have a unique port number
+; Printer settings
+PRINTER=WINDOWS
+
+;Trace32 API - Next 3 commands are for PERL testing
+;;RCL=NETASSIST
+;PACKLEN=1024
+;PORT=20000
+

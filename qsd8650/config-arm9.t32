@@ -1,0 +1,21 @@
+OS=
+ID=T32
+TMP=C:\TEMP
+SYS=C:\T32
+
+;Enable T32 Intercom
+IC=NETASSIST
+PORT=20000  ; ARM9
+;PORT=20001  ; ARM11
+
+PBI=
+NET
+NODE=${2}
+USE=100     ; Power Trace Ethernet - 1st Device on Bus
+;USE=011    ; Power Debug Module looks like 2 devices - 2nd&3rd Device on Bus
+;CORE=1     ; Daisy-chained core 1
+;CORE=2     ; Daisy-chained core 2
+
+SCREEN=
+FONT=SMALL
+HEADER=ARM9 ${2}

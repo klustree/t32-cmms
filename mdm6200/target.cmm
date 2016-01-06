@@ -1,0 +1,195 @@
+;============================================================================
+; MDM6600
+;============================================================================
+
+global &BuildBase &LinuxBase
+
+&BuildId=""
+&BuildBase="D:\Works\Projects\2.LG_CarInfo\svn\amss\build\ms"
+&LinuxBase="Z:\works\Projects\2.LG_CARINFO\yoonki\amss\qclinux\oklinux_2.6.23\kernel"
+&Editor="C:\WINDOWS\notepad.exe"
+&T32_main="C\T32\Linux"
+
+if "&BuildId"==""
+  &BuildId="SCAUTNZ"
+
+chdir &BuildBase
+
+;============================================================================
+menu.reprogram
+(
+	add
+	menu
+    (
+		popup "MDM66xx"
+      (
+	  
+			menuitem "&Attach"
+			(
+				print ""
+				print "*** Script to attach T32/JTAG to a running target ***"
+				print ""
+
+				print "Configuring T32 for ARM11..."
+
+				sys.cpu ARM1136J
+				System.Option DACR ON
+				Tronchip.set FIQ OFF
+				Tronchip.set IRQ OFF
+				Tronchip.set SWI OFF
+				Tronchip.set DABORT off
+				Tronchip.set PABORT off
+				Tronchip.set UNDEF OFF
+				sys.option ENRESET ON
+				sys.option RESBREAK OFF
+				
+				Tronchip.set RESET ON
+				Tronchip.set StepVector OFF
+				
+				print "Enabling real-time clock..."
+				sys.jtagclock rtck
+
+				print ""
+				print "Now attach the JTAG, very carefully connecting the top pins first."
+				;print "Hit enter when connected."
+
+				;enter &wait
+
+				print ""
+				print "Attaching to target..."
+				sys.mode attach
+
+				if run()
+					break
+			)
+			
+			separator
+
+			
+			menuitem "&Erase Nand"
+			(
+				chdir &BuildBase
+				chdir ..\..\core\storage\flash\tools\src\nand
+
+				if run()   
+				break
+
+				do erasenand
+			)
+      
+			menuitem "Program &Build"
+			(
+				chdir &BuildBase
+				chdir ..\..\core\storage\flash\tools\src\nand
+				do mjnand SCAUTNZ
+			)
+
+			separator
+
+			menuitem "Bootloader - Load Symbols"
+			(
+				chdir &BuildBase
+
+				d.load.elf ../../core/boot/secboot2/dbl/dbl_scautnz.elf /nocode /noclear /gcc3 /cpp /anysym
+				d.load.elf ../../core/boot/secboot2/osbl/osbl_scautnz.elf /nocode /noclear /gcc3 /cpp /anysym
+
+				tronchip.set dabort off
+				tronchip.set pabort off
+				tronchip.set undef off
+				tronchip.set reset off
+
+				; jay.choi  d.load.elf Gen10.elf /nocode /noclear /gcc3 /cpp
+				;  d.load.elf GenGSM.elf /nocode
+				;  do loadsyms "all" scautnz
+
+				; jay.choi  b.s 0x100000 /onchip ; jay.choi
+				  do cmm/setl4path.cmm ; jay.choi
+
+				;  Y.SPATH.DELETE;
+				Y.SPATH += ../../core/boot/secboot2/common/shared/src
+				Y.SPATH += ../../core/boot/secboot2/dbl/shared/src 
+				Y.SPATH += ../../core/boot/secboot2/dbl/target/qs6695/src
+				Y.SPATH += ../../core/boot/secboot2/osbl/shared/src
+				Y.SPATH += ../../core/boot/secboot2/osbl/target/qsc6695/src
+				Y.SPATH += ../../core/dal/framework/sys/src/boot
+				Y.SPATH += ../../core/storage/flash/src/dal
+				Y.SPATH += ../../core/storage/flash/src/dal/config_v2
+				Y.SPATH += ../../core/storage/flash/src/hal
+				Y.SPATH += ../../core/storage/flash/src/hal/config_v1
+
+				;  go dbl_main_ctl /onchip
+				;  go dbl_load_hdr_and_image /onchip
+				;  go dbl_load_osbl_image /onchip
+				go osbl_main_ctl /onchip
+				;  go osbl_flash_init /onchip
+				;  go nand_block_get_state /onchip
+				;  go bl_flash_nand_load_bad_block_table /onchip
+				;  go boot_flash_dev_nand_init_and_register /onchip  
+				;  go nand_entry_init /onchip
+				;  d.l dbl_flash_shared_op
+				;  go tmc_init /onchip
+
+				wait !run()
+				if r(pc)==0xffff0000
+				(
+					go dbl_main_ctl /onchip
+					wait !run()
+				)
+				d.l
+				y.b
+
+				enddo
+			)
+
+			separator
+
+			menuitem "&Load symbols"
+			(
+				chdir &BuildBase
+				
+				;  print "input the build ID : "
+				;  enter &BuildID
+
+				  y.reset
+				  do loadsyms all scautnz
+
+				; jay.choi  b.s 0x100000 /onchip ; jay.choi
+				  do cmm/setl4path.cmm ; jay.choi
+				  do linux_vm.cmm &BuildBase &LinuxBase ; mds.yoonki
+				  
+				;  go tmc_init /onchip
+				;  go voc_state_idle_entry /onchip
+				;  wait !run()
+				;  y.b
+				;  d.l  
+			)
+
+			separator
+			
+			menuitem "Reset Symbols"
+			(
+				symbol.reset
+			)
+
+			menuitem "Delete Symbols"
+			(
+				symbol.delete
+			)
+
+			menuitem "Periphral View"
+			(
+				chdir &BuildBase
+				
+				per.view ../../core/api/systemdrivers/hwio/qsc6695/t32/hwioreg.per
+			) 
+			
+
+			
+		)
+    )
+)
+
+;============================================================================
+; END
+;============================================================================
+

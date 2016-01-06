@@ -1,0 +1,67 @@
+;*****************************************************************************
+;**           T32_QSD8650_SCORPION.CMM                                      **
+;**           This script sets up SCORPION JTAG scan for non-DaisyChain mode**
+;**                                                                         **
+;**           Changes:                                                      **
+;**           03-10-07   First version KBurke                               **
+;*****************************************************************************
+ENTRY &arg_name &arg_node_num &arg_port_num &arg_core_num
+
+local &arg_name 
+local &arg_node_num 
+local &arg_port_num
+local &arg_core_num
+local &cmm_dir
+local &core_startup
+local &t32_tempdir
+
+&cmm_dir=os.ppd()                      ; directory where this script is running from
+&core_startup="T32_DAP_unix.cmm"
+
+if (os.file("&cmm_dir/&core_startup"))
+(
+  do "&cmm_dir/&core_startup"            ; Call standard dap setup and then perform any required overrides
+)
+else
+(
+  print "&cmm_dir/&core_startup" not found"
+  enddo 1
+)
+
+if (&arg_core_num=="1")
+(
+  if Analyzer()
+  (
+    etm.portmode 1/1
+    ;etm.portmode continuous
+    etm.portsize 16
+    ;etm.contextid 32
+    etm.datatrace address
+    trace.autoinit.on
+    trace.clock 1mhz
+    etm.CYCLEACCURATE on
+    etm.on
+  )
+)
+
+
+;------------------------------------------------------------------------------
+; override any other settings that seem appropriate
+;------------------------------------------------------------------------------
+
+&t32_tempdir=os.ptd()             ; get the active T32 temp directory name 
+cd &t32_tempdir                   ; change directory to the temp T32 directory as default 
+
+printer.file &t32_tempdir/"&arg_name"_"&arg_node_num"_00.lst
+
+
+ENDDO 0
+
+
+
+
+
+
+
+
+
